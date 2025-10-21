@@ -1,36 +1,27 @@
-<?php 
-include('header.php'); 
-
-
-// 五組帳號、密碼、姓名、身分
-$users = [
-    "root"  => ["password" => "password", "name" => "管理員", "role" => "teacher"],
-    "user1" => ["password" => "pw1", "name" => "小明",   "role" => "student"],
-    "user2" => ["password" => "pw2", "name" => "小華",   "role" => "student"],
-    "user3" => ["password" => "pw3", "name" => "小美",   "role" => "student"],
-    "user4" => ["password" => "pw4", "name" => "小強",   "role" => "student"],
-];
+<?php
+// 引用 header.php，它會自動幫我們 session_start()
+require_once('header.php');
+require_once('db.php');
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $account = $_POST["account"] ?? "";
     $password = $_POST["password"] ?? "";
     $redirect = $_POST["redirect"] ?? "success.php";
 
-    if (isset($users[$account]) && $users[$account]["password"] === $password) {
-        // 登入成功
-        $_SESSION["account"] = $account;
-        $_SESSION["name"] = $users[$account]["name"];
-        $_SESSION["role"] = $users[$account]["role"];
+    $account = mysqli_real_escape_string($conn, $_POST['account']);
+    $sql = "select * from user where account = '$account'";
+    $result = mysqli_query($conn, $sql);
 
-        header("Location: $redirect");
-        exit;
-    } else {
-        // 登入失敗
-        header("Location: login.php?msg=" . urlencode("帳號或密碼錯誤") . "&redirect=" . urlencode($redirect));
-        exit;
+    if ($user = mysqli_fetch_assoc($result)) {
+        if ($password === $user['password']) {
+            $_SESSION["account"] = $user['account'];
+            $_SESSION["name"] = $user['name'];
+            $_SESSION["role"] = $user['role'];
+
+            header("Location: $redirect");
+            exit;
+        }
     }
 }
-
 $msg = $_GET["msg"] ?? "";
 $redirect = $_GET["redirect"] ?? "success.php";
 ?>
